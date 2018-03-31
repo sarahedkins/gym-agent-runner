@@ -18,7 +18,7 @@ class AgentQ(object):
         self.action_space_n = self.gym_env.env.action_space.n
         self.Q = np.zeros([self.buckets, self.action_space_n])
         self.lr = .8 # learning rate
-        self.y = .95 # discount (don't get too excited there, buddy)
+        self.y = 1.00 # .95 # discount (don't get too excited there, buddy)
 
     def resetForNewEpisode(self):
         self.state = self.hash(self.initial_state)

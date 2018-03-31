@@ -8,11 +8,11 @@ env = gym.make('LetterNoose-v0')
 env.reset()
 
 # Make an agent
-agent = AgentQ(env, 27**5)
+agent = AgentQ(env, 27**3)
 
 # Run games
 game = GameRunner(env, agent)
-game.trainEpisodes(20)
+game.trainEpisodes(300)
 
 # View stats
 game.printTrainStats()
