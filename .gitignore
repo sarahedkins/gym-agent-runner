@@ -1,0 +1,5 @@
+.editorconfig
+
+__pycache__/
+*.pyc
+*.pyo
