@@ -1,7 +1,8 @@
 from collections import defaultdict
+from utils import get_all_states
 from gym import spaces
 import gym
-import string
+from string import ascii_lowercase
 import random
 
 alphabet = ["abcdefghijklmnopqrstuvwxyz"]
@@ -12,7 +13,7 @@ longerWords = ["giraffe", "umbrella", "elephant", "chalkboard"] # too long for m
 
 class LetterNooseGym(gym.Env):
  words = singleThreeLetterWord
- letters = list(string.ascii_lowercase)
+ letters = list(ascii_lowercase)
  metadata = {'render.modes': ['human', 'ansi']}
  def __init__(self):
    super(LetterNooseGym).__init__()
@@ -25,7 +26,7 @@ class LetterNooseGym(gym.Env):
    self.action_space = spaces.Discrete(26) # 26 letters, selecting a letter is the action
    self.observation_space = spaces.Discrete(self.solution_length) # _ _ _
 
- def _reset(self):
+ def reset(self):
    self.letters_guessed = []
    self.gameover = False
    self.solution = LetterNooseGym.words[random.randint(0, len(LetterNooseGym.words)-1)]
@@ -36,11 +37,17 @@ class LetterNooseGym(gym.Env):
    self.observation_space = spaces.Discrete(self.solution_length)
    return self.board
 
- def _render(self, mode='human', close=False):
+ def render(self, mode='human', close=False):
     print('\n')
     print('Already guessed:', self.letters_guessed)
     print('Attempts remaining:', self.attempts_remaining)
     print("Board", self.board)
+
+ def getRows(self):
+     return get_all_states(self.solution_length)
+
+ def getColumns(self):
+     return LetterNooseGym.letters
 
  def calcAttemptsAllowed(self):
     # number of unique letters in solution word + 20%
@@ -68,7 +75,7 @@ class LetterNooseGym(gym.Env):
              return False
      return True
 
- def _step(self, action):
+ def step(self, action):
     reward = 0
     char = LetterNooseGym.letters[action]
     self.decrementAttemptsRemaining()
@@ -85,5 +92,5 @@ class LetterNooseGym(gym.Env):
             self.gameover = True
         elif self.attempts_remaining <= 0:
             self.gameover = True
-            # print("Game Over")
+            # print("Game Over")       
     return self.board, reward, self.gameover, {}

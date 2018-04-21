@@ -13,7 +13,8 @@ class GameRunner():
 
     def trainEpisodes(self, n=1, verbose=False):
         for episode in range(1, n+1):
-            print("Episode", str(episode) + ":")
+            if verbose:
+                print("Episode", str(episode) + ":")
             self.episodesTrained += 1
             self.stats.append({ "episode": episode, "netReward": 0 })
             done = False
@@ -26,14 +27,15 @@ class GameRunner():
                     rewardsEarned = self.stats[episode - 1]["netReward"]
                     runningReward = rewardsEarned + reward
                     self.stats[episode - 1]["netReward"] = runningReward
+                    self.stats[episode - 1]["table"] = self.agent.getTable()
                     if verbose:
                         print("action:", action)
                         print("observation:", observation)
                         print("reward:", reward)
                         print("done:", done)
                         print("info:", info)
-                    else:
-                        print("action:", action, "reward:", reward)
+                    # else:
+                        # print("action:", action, "reward:", reward)
                     return observation, reward, done, info
                 done = self.agent.learn(episode, step_fn)
 
@@ -43,6 +45,11 @@ class GameRunner():
         print("Trained on", self.episodesTrained, "episodes.")
         print("Stats per Episode:")
         for episode in self.stats:
-            print("episode:", episode["episode"], "reward:",
-            episode["netReward"], "ending state:", episode["endState"])
+            print(
+            "episode:", episode["episode"],
+            # "reward:", episode["netReward"],
+            "state:", episode["endState"],
+            # "table:\n", episode["table"]
+            )
+
         print("===========================================")
