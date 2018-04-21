@@ -8,44 +8,46 @@
 '''
 
 import numpy as np
+import pandas as pd
+from utils import word_to_state
 
 class AgentQ(object):
     def __init__(self, gym_env, buckets):
         self.gym_env = gym_env
         self.initial_state = self.gym_env.reset()
         self.buckets = buckets # for hashing
-        self.state = self.hash(self.initial_state)
+        self.state = word_to_state(self.initial_state)
         self.action_space_n = self.gym_env.env.action_space.n
         self.Q = np.zeros([self.buckets, self.action_space_n])
-        self.lr = .8 # learning rate
-        self.y = 1.00 # .95 # discount (don't get too excited there, buddy)
+        self.cols = gym_env.env.getColumns()
+        self.rows = gym_env.env.getRows()
+        self.lr = .80 # learning rate
+        self.y = .95 # discount (don't get too excited there, buddy)
 
     def resetForNewEpisode(self):
-        self.state = self.hash(self.initial_state)
-        self.gym_env.reset()
+        self.initial_state = self.gym_env.reset()
+        self.state = word_to_state(self.initial_state)
 
-    # Converts vector to one number - credit to JT
-    def hash(self, vec):
-        l = len(vec)
-        bucket = l % self.buckets
-        for index in range(l):
-            item = ord(vec[index]) if type(vec[index]) is str else vec[index] # handle int and chars
-            bucket = (bucket + item) % self.buckets
-        return bucket
+    def chooseAction(self, episode):
+        # Choose an action by greedily (with noise) picking from Q table
+        # Add episode number to reduce noise over time
+        return np.argmax(self.Q[self.state, :] + np.random.randn(1, self.action_space_n) * (1.0/episode))
 
     def updateQTable(self, episode, step_fn): # Updates the Q-Table - credit to JT
-        # Choose an action by greedily (with noise) picking from Q table
-       a = np.argmax(
-         self.Q[self.state, :] + np.random.randn(1, self.action_space_n) * (
-           1. / (episode + 1)))
+       a = self.chooseAction(episode)
        # Get new state and reward from environment
+       # print("action:", a, "state", self.state)
        s1, r, done, info = step_fn(a)
-       s1 = self.hash(s1)
        # Update Q-Table with new knowledge
+       s1 = word_to_state(s1)
        self.Q[self.state, a] = self.Q[self.state, a] + self.lr * (
-         r + self.y * np.max(self.Q[s1, :]) - self.Q[self.state, a])
+         r + (self.y * np.max(self.Q[s1, :])) - self.Q[self.state, a])
        self.state = s1
        return done
+
+    def getTable(self):
+        df = pd.DataFrame(self.Q, index=self.rows, columns=self.cols)
+        return df.loc[(df!=0).any(axis=1)]
 
     def learn(self, episode, step_fn):
         done = self.updateQTable(episode, step_fn)
